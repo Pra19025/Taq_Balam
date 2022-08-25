@@ -7,14 +7,16 @@
 #define Bdown 4
 #define Cdown 2
 
-#define DELAY 200
+#define DELAY 1
 
 // Por ahora se asume que el comparador funciona correctamente
 int control_comparador = 0;
 int control_secuencia = 0;
-
+int a = 0;
 void Back_emf() {
   //En este case, se logra ir cambiando de comparador en las interrupciones
+  a = digitalRead(12);
+  digitalWrite(12,~a);
   switch (control_comparador) {
     case 0:
       // Se entró a la interrupción por el comparador A0
@@ -61,6 +63,7 @@ void setup() {
   pinMode(Adown, OUTPUT);
   pinMode(Bdown, OUTPUT);
   pinMode(Cdown, OUTPUT);
+  pinMode(12, OUTPUT);
 
   digitalWrite(Aup, 0);
   digitalWrite(Bup, 0);
@@ -80,7 +83,7 @@ void setup() {
   analogComparator.enableInterrupt(Back_emf, RISING);
   //Ejecución en bucle abierto
   int i = 0;
-  while (i < 20) {
+  while (i < 1000) {
     // La corriente entra Por A y sale por B
     digitalWrite(Cup, 0);
     digitalWrite(Aup, 1);
