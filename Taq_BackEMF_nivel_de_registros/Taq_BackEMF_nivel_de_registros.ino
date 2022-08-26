@@ -5,48 +5,47 @@ void setup() {
 
   pinMode(LED13, OUTPUT);
 
-  
-  // put your setup code here, to run once:
-  ACSR = 0x10;  //Limpiar bandera de interrupción del comparador
-  ADCSRA = (0 << ADEN); // Deshabilitar modulo ADC, por que se van a usar los canales para como negative
-  // inputs del comparador
-  // Lo de << permite indicar el bit que se va a poner en 0.
-
-  ADCSRB = (1 << ACME);  // Se habilita el multiplexor para las entradas del comparador
-
-  ADMUX = 0;  // Se selecciona A0 como negative input
-  // ADMUX = 1 para A1
-  // ADMUX = 2 para A2
-
-  ACSR |= 0x03; // interrupción rising edge
-
+  ACSR |= B00010000;      // Clear flag comparator interrupt (ACI bit to 1)
+  ACSR &= B11011111;      // Set ACBG, to be equal to "0"
+  ADCSRA = B00000000;     // Disable the ADC module because
+  ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
+  ADMUX = 1;              // Select A0 as comparator negative input
+  ACSR |= B00001011;      // Set interrupt on rising edge*/
 
 }
 
 void loop() {
-      if (enableLed) { //let's check if the analog comparator has raised the interrupt
-        //yes, so we do a little blink of the LED
-        digitalWrite(LED13, HIGH);
-        delay(200);
-        digitalWrite(LED13, LOW);
-        enableLed = false;
-    }
+  if (enableLed) { //let's check if the analog comparator has raised the interrupt
+    //yes, so we do a little blink of the LED
+    digitalWrite(LED13, HIGH);
+    delay(200);
+    digitalWrite(LED13, LOW);
+    enableLed = false;
+  }
 
-}  
+
+
+}
 
 
 ISR (ANALOG_COMP_vect) {
-
-    if (!(ACSR & B00100000)) { //revisar el valor de ACO, si es 0, y se esta en falling
-      //significa que la salida del comparador cambio de 0 a 1
-
+  if (ACSR & B00100010)            //If we are into falling edge
+  {
+    if (!(ACSR & B00100000)) {     //If ACO is 0 (we have that ! for inverse)
+      //A change from HIGH to LOW was detected
+      //Do what you want to do here...
+      enableLed = true;
+      ACSR |= B00000011;      // Remember top set back the interrupt on rising edge for next ISR
     }
-
-    else{
-      if(ACSR & B00100000){ //revisar el valor de ACO, si es 1, y estamos en rising, 
-        // significa que la salida del comparador cambio de 0 a 1
-        enableLed = true;
-      }
   }
-  ACSR |= 0x03; //reactivar la interrupción
+  else                              //else, if we are into rising edge
+  {
+    if ((ACSR & B00100000)) {       //If ACO is 1
+      //A change from LOW to HIGH was detected
+      //Do what you want to do here...
+      //enableLed = true;
+      ACSR |= B00000010;      // Remember top set back the interrupt on falling edge for next ISR
+    }
+  }
+
 }
