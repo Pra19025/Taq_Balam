@@ -1,20 +1,22 @@
 const byte LED13 = 13;
 volatile boolean bandera = false;
 
-#define Aup 9
-#define Bup 5
-#define Cup 3
-#define Adown 8
-#define Bdown 4
-#define Cdown 2
+#define Aup 9 //PB1
+#define Bup 5 //PD5
+#define Cup 3 //PD3
+#define Adown 8 //PB0
+#define Bdown 4 //PD4
+#define Cdown 2 //PD2
+
+
 
 
 
 #define DELAY 2
 
 int i = 0;
-int control_comparador = 0;
-int control_secuencia = 0;
+int volatile control_comparador = 0;
+int volatile control_secuencia = 0;
 
 
 void setup() {
@@ -34,9 +36,8 @@ void setup() {
   digitalWrite(Adown, 0);
   digitalWrite(Bdown, 1);
   digitalWrite(Cdown, 0);
-
+  Serial.println("Inicio");
   //Ejecución en bucle abierto
-  int i = 0;
   digitalWrite(LED13, 1);
 
 
@@ -45,9 +46,9 @@ void setup() {
   ADCSRA = B00000000;     // Disable the ADC module
   ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
   ADMUX = 0;              // Select A0 as comparator negative input
-  ACSR |= B00001011;      // Set interrupt on rising edge*/
+  // ACSR |= B00001011;      // Set interrupt on rising edge*/
 
-  while (i < 500) {
+  while (i < 1000) {
 
     // La corriente entra Por A y sale por B
     digitalWrite(Cup, 0);
@@ -85,47 +86,104 @@ void setup() {
 }
 
 
-
-
-
 void loop() {
-  Serial.println(control_comparador);
- 
+  // Serial.println(control_comparador);
+
   switch (control_comparador) {
     case 0:
       // La corriente entra Por A y sale por B
-      digitalWrite(Cup, 0);
-      digitalWrite(Aup, 1);
+      //      digitalWrite(Aup, 1);
+      //      digitalWrite(Bdown, 1);
+      //
+      //      digitalWrite(Cup, 0);
+      //      digitalWrite(Adown, 0);
+      //      digitalWrite(Bup, 0);
+      //      digitalWrite(Cdown, 0);
+
+      PORTD = B00010000;
+      PORTB = B00000010;
+
+
       break;
     case 1:
       //La corriente Entre Por A y sale por C
-      digitalWrite(Bdown, 0);
-      digitalWrite(Cdown, 1);
+      //      digitalWrite(Aup, 1);
+      //      digitalWrite(Cdown, 1);
+      //
+      //      digitalWrite(Bdown, 0);
+      //      digitalWrite(Adown, 0);
+      //      digitalWrite(Bup, 0);
+      //      digitalWrite(Cup, 0);
+
+      PORTD = B00000100;
+      PORTB = B00000010;
+
+
       break;
 
     case 2:
       // La Corriente entra por B y Sale por C
-      digitalWrite(Aup, 0);
-      digitalWrite(Bup, 1);
+      //      digitalWrite(Bup, 1);
+      //      digitalWrite(Cdown, 1);
+      //
+      //      digitalWrite(Aup, 0);
+      //      digitalWrite(Adown, 0);
+      //      digitalWrite(Cup, 0);
+      //      digitalWrite(Bdown, 0);
+
+      PORTD = B00100100;
+      PORTB = B00000000;
+
 
       break;
 
     case 3:
       // La corriente entra por B y sale por A
-      digitalWrite(Cdown, 0);
-      digitalWrite(Adown, 1);
+      //      digitalWrite(Adown, 1);
+      //      digitalWrite(Bup, 1);
+      //
+      //      digitalWrite(Cdown, 0);
+      //      digitalWrite(Aup, 0);
+      //      digitalWrite(Bdown, 0);
+      //      digitalWrite(Cup, 0);
+
+      PORTD = B00100000;
+      PORTB = B00000001;
+
+
       break;
 
     case 4:
       //La corriente entra por C y sale por A
-      digitalWrite(Cup, 1);
-      digitalWrite(Bup, 0);
+      //      digitalWrite(Cup, 1);
+      //      digitalWrite(Adown, 1);
+      //
+      //      digitalWrite(Bup, 0);
+      //      digitalWrite(Aup, 0);
+      //      digitalWrite(Bdown, 0);
+      //      digitalWrite(Cdown, 0);
+
+      PORTD = B00001000;
+      PORTB = B00000001;
+
+
       break;
 
     case 5:
       // la corriente entra por C y sale por B
-      digitalWrite(Adown, 0);
-      digitalWrite(Bdown, 1);
+
+      //      digitalWrite(Cup, 1);
+      //      digitalWrite(Bdown, 1);
+      //
+      //      digitalWrite(Aup, 0);
+      //      digitalWrite(Bup, 0);
+      //      digitalWrite(Adown, 0);
+      //      digitalWrite(Cdown, 0);
+
+      PORTD = B00011000;
+      PORTB = B00000000;
+
+
       break;
 
   }
@@ -137,24 +195,25 @@ void loop() {
 
 
 ISR (ANALOG_COMP_vect) {
-  //
-  //  for (i = 0; i < 10; i++) {
-  //    if (control_comparador & 1) {
-  //      if (!(ACSR & 0x20)) i -= 1;
+
+  //    for (i = 0; i < 2; i++) {
+  //      if (control_comparador & 1) {
+  //        if (!(ACSR & 0x20)) i -= 1;
+  //      }
+  //      else {
+  //        if ((ACSR & 0x20)) i -= 1;
+  //      }
   //    }
-  //    else {
-  //      if ((ACSR & 0x20)) i -= 1;
-  //    }
-  //  }
-  delayMicroseconds(300);
+  delayMicroseconds(100);
   //digitalWrite(LED13, 0);
-  Serial.println(control_comparador);
+
 
   switch (control_comparador) {
     case 0:
       // Se entró a la interrupción por el comparador A0
       control_comparador = 1;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 2;
 
       ACSR |= (1 << 1);
@@ -166,6 +225,7 @@ ISR (ANALOG_COMP_vect) {
     case 1:
       control_comparador = 2;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 1;
       ACSR |= B00000011;      // Remember top set back the interrupt on rising edge for next ISR
 
@@ -173,6 +233,7 @@ ISR (ANALOG_COMP_vect) {
     case 2:
       control_comparador = 3;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 0;
       ACSR |= (1 << 1);
       ACSR &= ~(1 << 0);
@@ -182,12 +243,14 @@ ISR (ANALOG_COMP_vect) {
     case 3:
       control_comparador = 4;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 2;
       ACSR |= B00000011;      // Remember top set back the interrupt on rising edge for next ISR
       break;
     case 4:
       control_comparador = 5;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 1;
       ACSR |= (1 << 1);
       ACSR &= ~(1 << 0);
@@ -196,10 +259,10 @@ ISR (ANALOG_COMP_vect) {
     case 5:
       control_comparador = 0;
       ADCSRA = B00000000;     // Disable the ADC module
+      ADCSRB = B01000000;     // Enable the MUX selector for negative input of comparator
       ADMUX = 0;
       ACSR |= B00000011;      // Remember top set back the interrupt on rising edge for next ISR
       break;
-
 
   }
 
