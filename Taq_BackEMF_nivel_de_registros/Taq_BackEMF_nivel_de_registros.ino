@@ -199,10 +199,10 @@ void loop() {
       break;
 
   }
-  Serial.print("Comparador: ");
-  Serial.println(control_comparador);
-  Serial.print("Secuencia: ");
-  Serial.println(control_secuencia);
+//  Serial.print("Comparador: ");
+//  Serial.println(control_comparador);
+//  Serial.print("Secuencia: ");
+//  Serial.println(control_secuencia);
 
   if (control_comparador == control_secuencia) {
     if (control_comparador < 6) {
